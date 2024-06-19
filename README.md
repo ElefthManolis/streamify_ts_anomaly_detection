@@ -18,6 +18,7 @@ and follow the installation instructions of the repo
 
 
 ## Generate daatsets
+Create a folder **data** and download the TSB-UAD-Public dataset.
 
 In order to generate the datasets with the different normalities you have to run the python script below
 ```
