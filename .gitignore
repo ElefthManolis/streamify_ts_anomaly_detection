@@ -1,0 +1,8 @@
+# ignore the data folder
+data/
+
+# ignore the generated timeseries folder
+generated_ts_dataset/
+
+# this repo will be cloned by the user manually
+TSB-UAD/
