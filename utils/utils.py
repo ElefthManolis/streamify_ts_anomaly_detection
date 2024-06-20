@@ -12,7 +12,7 @@ def timeit(func):
         result = func(*args, **kwargs)
         end_time = time.perf_counter()
         total_time = end_time - start_time
-        print(f'Function {func.__name__}{args} {kwargs} Took {total_time:.4f} seconds')
+        print(f'Function {func.__name__} Took {total_time:.4f} seconds')
         return result
     return timeit_wrapper
 
@@ -69,7 +69,39 @@ def load_timeseries(dataset_path: str, file: List[str]):
                     output['labels'].append(label)
             return output
 
+def decide_anomaly(cpd_points):
+    """
+    The function takes as argument the change points that the signal changes its behaviour.
+    To categorize a segment of a signal as an outlier, a point detected 
+    as a change point should be at most 100 time units away from the previous one.
+    """
+    outlier_segments = []
+    for i in range(1, len(cpd_points)):
+        if cpd_points[i] - cpd_points[i-1] <= 100:
+            outlier_segments.append((cpd_points[i-1], cpd_points[i]))
+    return outlier_segments
 
+
+
+def contains_number(tuples_list, number):
+    for tup in tuples_list:
+        if number in tup:
+            return True
+    return False
+
+def refine_scores(scores, outlier_segments):
+    """
+    This function takes as arguments the list with the outlier scores 
+    that the model produced and the outlier segments from the
+    change point detection algorithm
+    """
+    new_scores = []
+    for idx, score in enumerate(scores):
+        if contains_number(outlier_segments, idx):
+            new_scores.append(score + (1 - score)/2)
+        else:
+            new_scores.append(score - score/2)
+    return new_scores
 
 
 def transform_predictions_format(predictions: np.array):
