@@ -33,6 +33,7 @@ def variant1(batched_dataset, filename, model):
         modelName='IForest'
         clf = IForest(n_jobs=-1) # use all the cores to accelerate the procedure (n_jobs=-1)
         scores = []
+        # iterate throw batches in the entire signal
         for batch in batched_dataset:
             # convert the timeseries from list to numpy array
             batch_ts = np.array(batch['data'], dtype=np.float64)
@@ -45,9 +46,6 @@ def variant1(batched_dataset, filename, model):
 
             data_train = batch_ts[:int(0.1*len(batch_ts))]
             data_test = batch_ts
-
-            X_train = Window(window = slidingWindow).convert(data_train).to_numpy()
-            X_test = Window(window = slidingWindow).convert(data_test).to_numpy()
 
             
             x = X_data
@@ -71,6 +69,7 @@ def variant1(batched_dataset, filename, model):
         scores = []
         slidingWindow = 7
         clf = lstm(slidingwindow = slidingWindow, predict_time_steps=1, epochs = 5, patience = 5, verbose=0)
+        # iterate throw batches in the entire signal
         for batch in batched_dataset:
 
             batch_ts = np.array(batch['data'], dtype=np.float64)
@@ -100,12 +99,12 @@ def variant1(batched_dataset, filename, model):
 @timeit
 def variant2(batched_dataset, filename, model):
     timeseries, labels = concat_dataset(batched_dataset)
-    # detection
-    
+
     if model == 'IForest':
         modelName='IForest'
         clf = IForest(n_jobs=-1) # use all the cores to accelerate the procedure (n_jobs=-1)
         scores = []
+        # iterate throw batches in the entire signal
         for batch in batched_dataset:
             # convert the timeseries from list to numpy array
             batch_ts = np.array(batch['data'], dtype=np.float64)
@@ -140,7 +139,43 @@ def variant2(batched_dataset, filename, model):
         plt.savefig('online_'+modelName+'_'+filename+'.png')
         plt.close()
     elif model == 'lstm':
-        pass
+
+        modelName='LSTM'
+        scores = []
+        slidingWindow = 7
+        clf = lstm(slidingwindow = slidingWindow, predict_time_steps=1, epochs = 5, patience = 5, verbose=0)
+        # iterate throw batches in the entire signal
+        for batch in batched_dataset:
+
+            batch_ts = np.array(batch['data'], dtype=np.float64)
+            batch_labels = np.array(batch['labels'])
+
+            # detect change point in the batched signal
+            algo = rpt.Pelt(model="rbf").fit(batch_ts)
+            result = algo.predict(pen=10)
+            outlier_segments = decide_anomaly(result)
+                     
+            data_train = batch_ts[:int(0.1*len(batch_ts))]
+            data_test = batch_ts
+
+            
+            clf.fit(data_train, data_test)
+            measure = Fourier()
+            measure.detector = clf
+            measure.set_param()
+            clf.decision_function(measure=measure)
+                    
+            score = clf.decision_scores_
+            score = MinMaxScaler(feature_range=(0,1)).fit_transform(score.reshape(-1,1)).ravel()
+
+            score = refine_scores(score, outlier_segments)
+            scores.append(score)
+
+        scores = np.array(list(itertools.chain.from_iterable(scores))) # merge all the score lists
+
+        plotFig(timeseries, labels, scores, slidingWindow, fileName=filename, modelName=modelName)
+        plt.savefig('online_'+modelName+'_'+filename+'.png')
+        plt.close()
 
 
 
