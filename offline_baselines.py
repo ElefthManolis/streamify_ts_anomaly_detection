@@ -33,13 +33,6 @@ def isolation_forest(timeseries, labels, filename):
     slidingWindow = find_length(timeseries)
     X_data = Window(window = slidingWindow).convert(timeseries).to_numpy()
 
-    data_train = timeseries[:int(0.1*len(timeseries))]
-    data_test = timeseries
-
-    X_train = Window(window = slidingWindow).convert(data_train).to_numpy()
-    X_test = Window(window = slidingWindow).convert(data_test).to_numpy()
-
-
 
     modelName='IForest'
     clf = IForest(n_jobs=-1) # use all the cores to accelerate the procedure (n_jobs=-1)

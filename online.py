@@ -24,11 +24,12 @@ import ruptures as rpt # library for change point detection
 
 @timeit
 def variant1(batched_dataset, filename, model):
-    timeseries, labels = concat_dataset(batched_dataset)
-    
     """
     Streamify static methods
     """
+
+    timeseries, labels = concat_dataset(batched_dataset)
+    
     if model == 'IForest':
         modelName='IForest'
         clf = IForest(n_jobs=-1) # use all the cores to accelerate the procedure (n_jobs=-1)
@@ -98,6 +99,11 @@ def variant1(batched_dataset, filename, model):
 
 @timeit
 def variant2(batched_dataset, filename, model):
+    """
+    Implementation of the variant 2
+    for the Isolation Forest and the LSTM architecture
+    """
+
     timeseries, labels = concat_dataset(batched_dataset)
 
     if model == 'IForest':

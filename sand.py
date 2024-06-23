@@ -10,22 +10,25 @@ import warnings
 from TSB_UAD.utils.slidingWindows import find_length, plotFig
 from sklearn.preprocessing import MinMaxScaler
 
-from utils.utils import plot_timeseries, transform_predictions_format, load_timeseries
+from utils.utils import load_timeseries, timeit
 
 from TSB_UAD.models.sand import SAND
 
 warnings.filterwarnings('ignore') 
 
 
-
+@timeit
 def sand(timeseries, labels, filename):
     timeseries = np.array(timeseries, dtype=np.float64)
     labels = np.array(labels)
     slidingWindow = find_length(timeseries)
+    if slidingWindow > 100:
+        slidingWindow = 100
+    
     modelName='SAND (online)'
     clf = SAND(pattern_length=slidingWindow,subsequence_length=4*(slidingWindow))
     x = timeseries
-    clf.fit(x,online=True,alpha=0.5,init_length=5000,batch_size=2000,verbose=True,overlaping_rate=int(4*slidingWindow))
+    clf.fit(x,online=True,alpha=0.5,init_length=1000,batch_size=2000,verbose=True,overlaping_rate=int(4*slidingWindow))
     score = clf.decision_scores_
     score = MinMaxScaler(feature_range=(0,1)).fit_transform(score.reshape(-1,1)).ravel()
     plotFig(timeseries, labels, score, slidingWindow, fileName=filename, modelName=modelName)
