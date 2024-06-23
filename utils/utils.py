@@ -98,9 +98,9 @@ def refine_scores(scores, outlier_segments):
     new_scores = []
     for idx, score in enumerate(scores):
         if contains_number(outlier_segments, idx):
-            new_scores.append(score + (1 - score)/2)
+            new_scores.append(score + (1 - score)/2) # new_score = old_score + (1 - old_score) / 2
         else:
-            new_scores.append(score - score/2)
+            new_scores.append(score - score/2) # new_score = old_score - old_score/2
     return new_scores
 
 
